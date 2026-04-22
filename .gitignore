@@ -1,0 +1,31 @@
+.venv/
+.agents/
+.qwen/
+runs/
+postgres_data/
+.playwright-cli/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Virtualenv helpers
+.python-version
+
+# IDEs and editors
+.idea/
+.vscode/
+
+# macOS
+.DS_Store

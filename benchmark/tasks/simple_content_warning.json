@@ -1,0 +1,33 @@
+{
+  "task_id": "simple_content_warning",
+  "title": "Add content_warning metadata to MediaCMS",
+  "difficulty": "simple",
+  "instructions": "Add a new `content_warning` metadata field to MediaCMS media items. Carry it through the Django model, serializer/API surface, validation, and one visible product surface. Add targeted tests for save/read and validation behavior.",
+  "acceptance_commands": [
+    "docker compose -f upstream/mediacms/docker-compose-dev.yaml -f docker/compose.benchmark.yaml up -d db redis migrations web celery_worker benchmark_runner benchmark_judge",
+    "docker compose -f upstream/mediacms/docker-compose-dev.yaml -f docker/compose.benchmark.yaml exec --env TESTING=True -T web pytest tests/api files/tests",
+    "docker compose -f upstream/mediacms/docker-compose-dev.yaml -f docker/compose.benchmark.yaml exec --env TESTING=True -T web python manage.py shell -c \"from files.models import Media; from files.serializers import SingleMediaSerializer; field_names=[field.name for field in Media._meta.fields]; serializer_fields=SingleMediaSerializer().get_fields().keys(); assert 'content_warning' in field_names; assert 'content_warning' in serializer_fields\""
+  ],
+  "expected_artifacts": [
+    "model field",
+    "api exposure",
+    "validation",
+    "targeted tests"
+  ],
+  "timeout_seconds": 900,
+  "scoring_hooks": [
+    "task_solved",
+    "quality",
+    "speed/cost"
+  ],
+  "extra": {
+    "reference_solution_strategy": "Modify Media model and serializer fields, update API-visible validation path, and add focused tests that prove save/read plus invalid-value rejection.",
+    "allowed_edit_roots": [
+      "upstream/mediacms"
+    ],
+    "task_prompt_constraints": [
+      "Do not modify benchmark harness files during task execution.",
+      "Keep changes localized to the MediaCMS app and its tests."
+    ]
+  }
+}

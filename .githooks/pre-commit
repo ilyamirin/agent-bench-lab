@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+exec "$REPO_ROOT/.venv/bin/python" "$REPO_ROOT/scripts/check_staged_secrets.py"

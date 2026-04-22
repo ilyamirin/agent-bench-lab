@@ -1,0 +1,3 @@
+[submodule "upstream/mediacms"]
+	path = upstream/mediacms
+	url = https://github.com/mediacms-io/mediacms.git

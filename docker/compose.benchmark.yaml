@@ -1,0 +1,14 @@
+services:
+  benchmark_runner:
+    image: python:3.12-slim
+    working_dir: /workspace
+    command: ["sh", "-lc", "sleep infinity"]
+    volumes:
+      - ..:/workspace
+
+  benchmark_judge:
+    image: python:3.12-slim
+    working_dir: /workspace
+    command: ["sh", "-lc", "sleep infinity"]
+    volumes:
+      - ..:/workspace
