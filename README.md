@@ -1,7 +1,10 @@
-# coding-agents-comparison
+# agent-bench-lab
 
-Benchmark harness for comparing coding agents against the same Python project,
-task pack, and verification flow.
+![agent-bench-lab README hero](docs/assets/readme-hero-agent-bench-lab.png)
+
+Public repository for the `coding-agents-comparison` benchmark harness for
+comparing coding agents against the same Python project, task pack, and
+verification flow.
 
 ## Status
 
@@ -19,6 +22,9 @@ What is still evolving:
 - adapter coverage across all target agents
 - browser-harness robustness across every agent/runtime combination
 - task breadth beyond the first benchmark task
+
+Suggested repository social preview asset:
+[social-preview-agent-bench-lab.png](docs/assets/social-preview-agent-bench-lab.png)
 
 ## What This Repository Ships
 
@@ -47,7 +53,10 @@ baseline with:
 Design and benchmark specs:
 
 - [2026-04-21 MediaCMS Benchmark Plan](docs/superpowers/specs/2026-04-21-mediacms-benchmark-plan.md)
-- [Public forensic appendix for task 1](docs/simple_content_warning_forensic_report.en.md)
+
+Latest detailed benchmark analysis:
+
+- [Forensic Report for `simple_content_warning`](docs/simple_content_warning_forensic_report.en.md)
 
 ## Setup
 

@@ -1,49 +1,73 @@
-# Appendix: Forensic Report for `simple_content_warning`
+# Forensic Report for `simple_content_warning`
 
-This public appendix keeps the high-level forensic conclusions from the first
-benchmark task while intentionally omitting raw local artifacts.
+This is the public-safe version of the task 1 forensic report.
 
-## Why This Document Is Sanitized
+It keeps the main conclusions from the current cohort while intentionally
+omitting raw local artifacts, unpublished run logs, and local-only workspace
+references.
 
-The original internal investigation used:
+## What The Task Required
 
-- local `.agents/` clones
-- local `runs/` benchmark artifacts
-- per-run logs, patches, screenshots, and browser traces
+The benchmark task asked agents to add `content_warning` support to the
+`MediaCMS` stack end-to-end:
 
-Those materials are not part of the public repository and are therefore not
-linked here.
-
-## Main Conclusions
-
-- The strongest success case on the first task was the `Qwen Code` control run.
-- The most common failure mode across the cohort was not raw code generation
-  quality, but failure to close the full execution-and-verification loop.
-- Common breakdown points included:
-  - provider or tool startup
-  - infra boot and environment normalization
-  - acceptance targeting
-  - browser-level verification
-  - false-positive completion before all required surfaces were wired
-
-## Practical Takeaway
-
-For this benchmark, end-to-end closure mattered more than partial code quality.
-A successful agent needed to:
-
-- modify the model and serializer contract
+- extend the model and serializer/API contract
 - wire at least one visible product surface
-- add targeted tests that matched benchmark acceptance
-- survive the verification pipeline without drifting into infrastructure or UI gaps
+- add targeted tests that match benchmark acceptance
+- survive automated checks and browser-level verification
 
-## Public-Safe References
+That is why many plausible-looking patches still counted as failures.
 
-- Benchmark plan: [2026-04-21-mediacms-benchmark-plan.md](superpowers/specs/2026-04-21-mediacms-benchmark-plan.md)
-- Task manifest: [benchmark/tasks/simple_content_warning.json](../benchmark/tasks/simple_content_warning.json)
-- Project attribution and licenses: [THIRD_PARTY.md](../THIRD_PARTY.md)
+## Cohort Outcome
 
-## Note
+- `Qwen Code` produced the only end-to-end success in the current cohort.
+- Several agents produced real partial implementations.
+- The dominant failure mode was not “no code,” but failure to close the full
+  implementation-and-verification loop.
 
-If curated benchmark reports are published later, they should be exported
-deliberately into tracked documentation rather than linked from raw local
-`runs/` directories.
+## Main Failure Patterns
+
+### Incomplete closure
+
+Many agents edited the right parts of the stack, but stopped short of a full
+benchmark-valid result.
+
+### Weak self-verification
+
+Several runs ended with optimistic completion summaries even when the resulting
+workspace still failed targeted benchmark checks.
+
+### Backend-first bias
+
+Some agents reached a coherent backend slice but still failed visible-surface
+completion or browser-level verification.
+
+### Drift from the benchmark contract
+
+In several partial runs, the agent solved a nearby problem rather than the
+exact task the benchmark specified.
+
+## Why `Qwen Code` Won
+
+`Qwen Code` stood out because it closed the full path:
+
+- required code changes were made across the needed layers
+- the benchmark-targeted checks passed
+- the visible product path survived browser verification
+
+The key differentiator was operational completeness, not just plausible code.
+
+## Public Takeaway
+
+This benchmark is most useful when read as a test of closure discipline:
+
+- can the agent understand the codebase
+- can it make the needed changes
+- can it verify those changes in the right environment
+- can it finish the real loop instead of stopping at a good-looking patch
+
+## Related Documents
+
+- Benchmark plan: [2026-04-21 MediaCMS Benchmark Plan](superpowers/specs/2026-04-21-mediacms-benchmark-plan.md)
+- Internal expanded report: `runs/reports/simple_content_warning_forensic_report.internal.md`
+- Cohort methodology and licensing context: [THIRD_PARTY.md](../THIRD_PARTY.md)

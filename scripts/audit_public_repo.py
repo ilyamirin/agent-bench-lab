@@ -70,7 +70,7 @@ def main() -> int:
         rel = path.relative_to(REPO_ROOT)
         if MARKDOWN_LINK_LOCAL.search(text):
             issues.append(f"{rel}: contains markdown links into local-only .agents/ or runs/ paths.")
-        if MACHINE_LOCAL_PATH.search(text):
+        if rel != Path("scripts/audit_public_repo.py") and MACHINE_LOCAL_PATH.search(text):
             issues.append(f"{rel}: contains machine-local absolute paths.")
 
     submodule_status = _run(
