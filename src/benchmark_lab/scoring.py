@@ -6,16 +6,16 @@ from .models import ScoreCard
 def score_v1(automated_checks: list[dict], duration_seconds: float | None) -> ScoreCard:
     passed = sum(1 for item in automated_checks if item.get("passed"))
     total = max(1, len(automated_checks))
-    if passed == total:
+    if passed == 0:
+        task_solved = 0
+    elif passed == total:
         task_solved = 4
     elif passed >= total - 1:
         task_solved = 3
     elif passed >= total // 2:
         task_solved = 2
-    elif passed > 0:
-        task_solved = 1
     else:
-        task_solved = 0
+        task_solved = 1
 
     if duration_seconds is None:
         speed_cost = None
@@ -39,4 +39,3 @@ def score_v1(automated_checks: list[dict], duration_seconds: float | None) -> Sc
         speed_cost=speed_cost,
         pending_axes=pending_axes,
     )
-
