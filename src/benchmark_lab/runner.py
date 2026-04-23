@@ -138,6 +138,63 @@ class BenchmarkRunner:
             actual_model=run_spec.model,
         )
 
+    def _build_infra_error_result(
+        self,
+        run_spec: RunSpec,
+        compatibility: CompatibilityResult,
+        *,
+        check_name: str,
+        artifact_path: Path,
+        command: list[str],
+        returncode: int | None,
+        stdout: str,
+        stderr: str,
+        duration_seconds: float | None = 0.0,
+    ) -> RunResult:
+        artifact_path.parent.mkdir(parents=True, exist_ok=True)
+        artifact_path.write_text(
+            json.dumps(
+                {
+                    "command": command,
+                    "returncode": returncode,
+                    "stdout": stdout,
+                    "stderr": stderr,
+                },
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        return RunResult(
+            run_spec=run_spec,
+            compatibility=compatibility,
+            status=RunStatus.INFRA_ERROR,
+            exit_code=returncode,
+            duration_seconds=duration_seconds,
+            stdout_path=artifact_path,
+            stderr_path=None,
+            patch_path=None,
+            scores=ScoreCard(
+                task_solved=0,
+                reliability=None,
+                quality=None,
+                speed_cost=None,
+                pending_axes=["reliability", "quality", "speed/cost"],
+            ),
+            automated_checks=[
+                {
+                    "name": check_name,
+                    "passed": False,
+                    "artifact": str(artifact_path),
+                    "returncode": returncode,
+                }
+            ],
+            manual_review={"status": "pending"},
+            actual_provider=run_spec.provider,
+            actual_model=run_spec.model,
+            run_metadata={},
+        )
+
     def build_prompt(self, task: TaskManifest) -> str:
         constraints = task.extra.get("task_prompt_constraints", [])
         constraint_block = "\n".join(f"- {item}" for item in constraints)
@@ -226,6 +283,34 @@ class BenchmarkRunner:
             except subprocess.TimeoutExpired:
                 return None, time.monotonic() - start, "timeout"
         return proc.returncode, time.monotonic() - start, None
+
+    def _docker_preflight(self, run_spec: RunSpec, paths: dict[str, Path]) -> RunResult | None:
+        command = ["docker", "ps", "--format", "{{.ID}}"]
+        proc = subprocess.run(
+            command,
+            cwd=self.repo_root,
+            env=os.environ.copy(),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if proc.returncode == 0:
+            return None
+        compatibility = CompatibilityResult(
+            status=CompatibilityStatus.COMPATIBLE,
+            adapter_name=run_spec.agent_id,
+            native_supported=True,
+        )
+        return self._build_infra_error_result(
+            run_spec,
+            compatibility,
+            check_name="docker_preflight",
+            artifact_path=run_spec.run_root / "checks" / "docker_preflight.json",
+            command=command,
+            returncode=proc.returncode,
+            stdout=proc.stdout,
+            stderr=proc.stderr,
+        )
 
     def _compose_command(self, workspace_dir: Path, *args: str) -> list[str]:
         return [
@@ -559,6 +644,11 @@ class BenchmarkRunner:
             result = self._build_incompatible_result(run_spec, compatibility)
             self._render_run_artifacts(result)
             return result
+
+        docker_preflight = self._docker_preflight(run_spec, paths)
+        if docker_preflight is not None:
+            self._render_run_artifacts(docker_preflight)
+            return docker_preflight
 
         home_dir = self._agent_home(run_spec)
         home_dir.mkdir(parents=True, exist_ok=True)

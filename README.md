@@ -94,6 +94,16 @@ The current CLI entrypoint is the benchmark cohort runner:
 PYTHONPATH=src .venv/bin/python -m benchmark_lab --agents qwen-code --attempts 1
 ```
 
+For a single agent and single attempt without cohort aggregation:
+
+```bash
+PYTHONPATH=src .venv/bin/python -m benchmark_lab.single_run --agent cline --attempt 10
+```
+
+The runner now performs an early Docker access preflight. If `docker ps` is not
+available from the runner process, the attempt exits early as `infra_error`
+instead of failing later during environment boot.
+
 This writes local-only artifacts under `runs/`. Those artifacts are part of the
 local evaluation workflow and are intentionally not versioned.
 
