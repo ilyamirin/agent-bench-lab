@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 
@@ -38,6 +39,16 @@ class QwenCodeAdapter(Adapter):
 
     def settings_path(self, workspace_dir: Path) -> Path:
         return workspace_dir / ".qwen" / "settings.json"
+
+    def prepare_workspace(self, run_spec: RunSpec, workspace_dir: Path, home_dir: Path) -> dict[str, str]:
+        _ = home_dir
+        settings_path = self.settings_path(workspace_dir)
+        settings_path.parent.mkdir(parents=True, exist_ok=True)
+        settings_path.write_text(
+            json.dumps(self.build_settings(run_spec), indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        return {"settings_path": str(settings_path)}
 
     def preflight(self, run_spec: RunSpec) -> CompatibilityResult:
         if run_spec.provider != "openrouter":
@@ -82,4 +93,3 @@ class QwenCodeAdapter(Adapter):
             "--prompt",
             prompt,
         ]
-

@@ -34,6 +34,19 @@ class QwenCodeAdapterTest(unittest.TestCase):
         self.assertEqual(provider["envKey"], "OPENROUTER_API_KEY")
         self.assertEqual(provider["baseUrl"], "https://openrouter.ai/api/v1")
 
+    def test_prepare_workspace_writes_settings_file(self) -> None:
+        adapter = QwenCodeAdapter(binary_path="/opt/homebrew/bin/qwen")
+        workspace_dir = self.repo_root / "workspace"
+        home_dir = self.repo_root / "home"
+        workspace_dir.mkdir()
+        home_dir.mkdir()
+
+        metadata = adapter.prepare_workspace(self.run_spec, workspace_dir, home_dir)
+
+        settings_path = workspace_dir / ".qwen" / "settings.json"
+        self.assertEqual(metadata["settings_path"], str(settings_path))
+        self.assertTrue(settings_path.exists())
+
     def test_headless_command_uses_native_json_mode(self) -> None:
         adapter = QwenCodeAdapter(binary_path="/opt/homebrew/bin/qwen")
 

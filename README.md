@@ -1,31 +1,70 @@
 # coding-agents-comparison
 
-Проект для сравнения разных агентов для программирования.
+Benchmark harness for comparing coding agents against the same Python project,
+task pack, and verification flow.
 
-## Структура
+## Status
 
-- `src/` — код проекта и общие утилиты для сравнения
-- `tests/` — тесты
-- `.agents/` — локальная папка с реализациями агентов, не хранится в git
-- `docs/` — заметки, спецификации и сопроводительная документация
-- `.venv/` — рабочее виртуальное окружение на Python 3.12, не хранится в git
+This repository is a public prototype, not a finished product.
 
-## Быстрый старт
+What is already in place:
 
-Использовать только локальное окружение проекта:
+- a Docker-based benchmark harness for `MediaCMS`
+- a strict model policy around `OpenRouter / qwen/qwen3.6-plus`
+- normalized run artifacts and cohort reporting
+- automated acceptance plus mandatory Playwright checks for UI-touching tasks
+
+What is still evolving:
+
+- adapter coverage across all target agents
+- browser-harness robustness across every agent/runtime combination
+- task breadth beyond the first benchmark task
+
+## What This Repository Ships
+
+- benchmark harness code in `src/`
+- tests in `tests/`
+- benchmark task manifests in `benchmark/tasks/`
+- benchmark and design docs in `docs/`
+- a git submodule reference to `MediaCMS` at `upstream/mediacms`
+
+What this repository does **not** ship:
+
+- local agent clones under `.agents/`
+- benchmark run outputs under `runs/`
+- local tool state such as `.qwen/`, `.openclaw/`, `.hermes/`, `.playwright-cli/`, or `.aider*`
+
+## Benchmark Scope
+
+The current benchmark prototype compares coding agents on a shared `MediaCMS`
+baseline with:
+
+- one benchmark target app: `MediaCMS`
+- one locked provider/model policy: `OpenRouter / qwen/qwen3.6-plus`
+- one current public task pack centered on `simple_content_warning`
+- automated acceptance checks and browser-level verification when a task changes visible UX/UI
+
+Design and benchmark specs:
+
+- [2026-04-21 MediaCMS Benchmark Plan](docs/superpowers/specs/2026-04-21-mediacms-benchmark-plan.md)
+- [Public forensic appendix for task 1](docs/simple_content_warning_forensic_report.en.md)
+
+## Setup
+
+Use the project virtual environment only:
 
 ```bash
 source .venv/bin/activate
 python --version
 ```
 
-Ожидаемая версия Python:
+Expected version:
 
 ```bash
 Python 3.12.x
 ```
 
-Если окружение нужно пересоздать:
+If you need to recreate the environment:
 
 ```bash
 rm -rf .venv
@@ -33,40 +72,73 @@ rm -rf .venv
 source .venv/bin/activate
 ```
 
-## Принципы
+## Running Checks
 
-- Работать только через `.venv`.
-- Хранить локальные реализации агентов в `.agents/`.
-- Не коммитить содержимое `.agents/` и артефакты окружения.
+Run the unit tests:
 
-## Текущий набор агентов
+```bash
+PYTHONPATH=src .venv/bin/python -m unittest discover -s tests
+```
 
-Сейчас в `.agents/` лежат такие репозитории:
+Run the public repository audit:
 
-1. `Hermes Agent` — `.agents/hermes-agent`
-2. `Kilo Code` — `.agents/kilocode`
-3. `OpenCode` — `.agents/opencode`
-4. `Cline` — `.agents/cline`
-5. `Qwen Code` — `.agents/qwen-code`
-6. `OpenHands` — `.agents/openhands`
-7. `Codebuff` — `.agents/codebuff`
-8. `Crush` — `.agents/crush`
-9. `Aider` — `.agents/aider`
-10. `OpenClaw` — `.agents/openclaw`
+```bash
+.venv/bin/python scripts/audit_public_repo.py
+```
 
-## Замены относительно исходного топа
+## Running a Benchmark Attempt
 
-- `Claude Code` заменен на `OpenCode`.
-- `BLACKBOXAI` заменен на `Aider`.
-- `Slate Agent` заменен на `OpenClaw`.
+The current CLI entrypoint is the benchmark cohort runner:
 
-## Спеки
+```bash
+PYTHONPATH=src .venv/bin/python -m benchmark_lab --agents qwen-code --attempts 1
+```
 
-- Основной benchmark-план: [2026-04-21-mediacms-benchmark-plan.md](/Users/ilyagmirin/PycharmProjects/coding-agents-comparison/docs/superpowers/specs/2026-04-21-mediacms-benchmark-plan.md)
+This writes local-only artifacts under `runs/`. Those artifacts are part of the
+local evaluation workflow and are intentionally not versioned.
 
-## Проверка результатов
+## Public Commit Rules
 
-- Для каждого benchmark-run сохранять артефакты в `runs/`.
-- Обязательный минимум проверки: automated acceptance checks, нормализованный `result.json`, краткая summary.
-- Если задача затрагивает UX/UI или любой видимый product surface, browser-level проверка обязательна.
-- Для такого browser-check использовать `Playwright` и фиксировать наблюдаемый результат в артефактах run'а.
+- keep `upstream/mediacms` as a clean submodule reference
+- do not commit local changes inside the submodule
+- do not commit `.agents/` contents
+- do not commit raw benchmark artifacts from `runs/`
+- keep local tool state out of public commits
+
+Before a public push, check both:
+
+```bash
+git status --short
+git -C upstream/mediacms status --short --untracked-files=all
+```
+
+## License and Third-Party Components
+
+The benchmark harness code in this repository is licensed under `MIT`:
+[LICENSE](LICENSE)
+
+`MediaCMS` is an external upstream submodule from
+[mediacms-io/mediacms](https://github.com/mediacms-io/mediacms.git) and keeps
+its own `AGPL-3.0` license. If you use the submodule, you need to review and
+comply with MediaCMS licensing separately from this repository.
+
+The full third-party inventory, upstream URLs, and license notes are documented
+in [THIRD_PARTY.md](THIRD_PARTY.md).
+
+## Current Local Agent Set
+
+The local comparison corpus currently targets:
+
+1. `Hermes Agent`
+2. `Kilo Code`
+3. `OpenCode`
+4. `Cline`
+5. `Qwen Code`
+6. `OpenHands`
+7. `Codebuff`
+8. `Crush`
+9. `Aider`
+10. `OpenClaw`
+
+These are local-only optional benchmark targets. Their upstream URLs and
+licenses are documented in [THIRD_PARTY.md](THIRD_PARTY.md).

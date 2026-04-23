@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
@@ -75,6 +76,12 @@ class RunSpec:
     def run_root(self) -> Path:
         return self.repo_root / "runs" / self.run_id
 
+    @property
+    def web_port(self) -> int:
+        # Use a deterministic high port so concurrent benchmark runs do not contend for :80.
+        digest = hashlib.sha1(self.run_id.encode("utf-8")).hexdigest()
+        return 15000 + (int(digest[:6], 16) % 10000)
+
 
 @dataclass(slots=True)
 class RunResult:
@@ -91,6 +98,7 @@ class RunResult:
     manual_review: dict[str, Any]
     actual_provider: str | None
     actual_model: str | None
+    run_metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -116,5 +124,5 @@ class RunResult:
             "manual_review": self.manual_review,
             "actual_provider": self.actual_provider,
             "actual_model": self.actual_model,
+            "run_metadata": self.run_metadata,
         }
-

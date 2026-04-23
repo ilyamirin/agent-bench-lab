@@ -1,9 +1,12 @@
 .venv/
 .agents/
 .qwen/
+.openclaw/
+.hermes/
 runs/
 postgres_data/
 .playwright-cli/
+.tmp-*/
 
 # Python
 __pycache__/
@@ -29,3 +32,4 @@ dist/
 
 # macOS
 .DS_Store
+.aider*

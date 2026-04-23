@@ -4,7 +4,7 @@ import json
 import math
 from pathlib import Path
 
-from .models import RunResult, ScoreCard
+from .models import CompatibilityStatus, RunResult, ScoreCard
 
 
 AXES = [
@@ -38,6 +38,72 @@ def render_markdown_summary(results: list[RunResult]) -> str:
             f"| {result.run_spec.agent_id} | {result.run_spec.task_id} | {result.status.value} | {pending} |"
         )
     return "\n".join(lines) + "\n"
+
+
+def render_cohort_summary(
+    executed_results: list[RunResult],
+    incompatible_results: list[RunResult],
+) -> str:
+    lines = [
+        "# Task 1 Cohort Summary",
+        "",
+        "## Executed Agents",
+        "",
+        "| Agent | Attempts | Best Status | Task Solved | Reliability | Quality | Speed/Cost |",
+        "| --- | --- | --- | --- | --- | --- | --- |",
+    ]
+    grouped: dict[str, list[RunResult]] = {}
+    for result in executed_results:
+        grouped.setdefault(result.run_spec.agent_id, []).append(result)
+    for agent_id, attempts in sorted(grouped.items()):
+        best = sorted(
+            attempts,
+            key=lambda item: (
+                item.scores.task_solved or 0,
+                item.scores.quality or -1,
+                item.scores.speed_cost or -1,
+            ),
+            reverse=True,
+        )[0]
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    agent_id,
+                    str(len(attempts)),
+                    best.status.value,
+                    str(best.scores.task_solved),
+                    str(best.scores.reliability),
+                    str(best.scores.quality),
+                    str(best.scores.speed_cost),
+                ]
+            )
+            + " |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Incompatible Agents",
+            "",
+            "| Agent | Status | Reason |",
+            "| --- | --- | --- |",
+        ]
+    )
+    for result in sorted(incompatible_results, key=lambda item: item.run_spec.agent_id):
+        reason = result.compatibility.details.get("reason") or json.dumps(result.compatibility.details, sort_keys=True)
+        lines.append(
+            f"| {result.run_spec.agent_id} | {result.compatibility.status.value} | {reason} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def write_preflight_json(status: CompatibilityStatus | str, payload: dict, output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        json.dumps({"status": str(status), **payload}, indent=2, sort_keys=True),
+        encoding="utf-8",
+    )
 
 
 def render_radar_chart_svg(title: str, score_card: ScoreCard) -> str:
