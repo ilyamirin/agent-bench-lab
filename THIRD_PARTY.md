@@ -79,6 +79,22 @@ are not redistributed as part of this repository.
 - Distribution status: local-only clone, not shipped
 - Upstream license: `MIT` (`.agents/opencode/LICENSE`)
 
+### NullClaw
+
+- Upstream repository: <https://github.com/nullclaw/nullclaw>
+- How this repository uses it: optional local benchmark target via pinned OCI image and local-only reference clone
+- Distribution status: local-only clone, not shipped
+- Upstream license: `MIT` (`.agents/nullclaw/LICENSE`)
+
+### Pi
+
+- Official homepage: <https://pi.dev/>
+- Upstream repository: <https://github.com/badlogic/pi-mono>
+- npm package: `@mariozechner/pi-coding-agent`
+- How this repository uses it: optional local benchmark target via native npm-installed CLI and local-only reference clone
+- Distribution status: local-only clone, not shipped
+- Upstream license: `MIT` (`.agents/pi/LICENSE`)
+
 ### OpenHands
 
 - Upstream repository: <https://github.com/OpenHands/OpenHands>

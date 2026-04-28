@@ -5,9 +5,11 @@ from .cline import ClineAdapter
 from .hermes import HermesAdapter
 from .kilocode import KiloCodeAdapter
 from .missing import MissingBinaryAdapter
+from .nullclaw import NullClawAdapter
 from .opencode import OpenCodeAdapter
 from .openclaw import OpenClawAdapter
 from .openhands import OpenHandsAdapter
+from .pi import PiAdapter
 from .qwen_code import QwenCodeAdapter
 from ..models import CompatibilityStatus
 
@@ -19,6 +21,8 @@ def build_adapter_registry() -> dict[str, object]:
         "cline": ClineAdapter(),
         "opencode": OpenCodeAdapter(),
         "kilocode": KiloCodeAdapter(),
+        "nullclaw": NullClawAdapter(),
+        "pi": PiAdapter(),
         "openhands": OpenHandsAdapter(),
         "hermes-agent": HermesAdapter(),
         "openclaw": OpenClawAdapter(),
@@ -48,9 +52,11 @@ __all__ = [
     "ClineAdapter",
     "HermesAdapter",
     "KiloCodeAdapter",
+    "NullClawAdapter",
     "OpenCodeAdapter",
     "OpenClawAdapter",
     "OpenHandsAdapter",
+    "PiAdapter",
     "QwenCodeAdapter",
     "MissingBinaryAdapter",
     "build_adapter_registry",

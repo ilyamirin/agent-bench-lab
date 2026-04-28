@@ -158,6 +158,8 @@ The local comparison corpus currently targets:
 8. `Crush`
 9. `Aider`
 10. `OpenClaw`
+11. `NullClaw`
+12. `Pi`
 
 These are local-only optional benchmark targets. Their upstream URLs and
 licenses are documented in [THIRD_PARTY.md](THIRD_PARTY.md).

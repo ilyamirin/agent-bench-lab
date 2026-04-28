@@ -32,6 +32,8 @@ The local comparison corpus in `.agents/` currently includes:
 8. `Crush` -> `.agents/crush`
 9. `Aider` -> `.agents/aider`
 10. `OpenClaw` -> `.agents/openclaw`
+11. `NullClaw` -> `.agents/nullclaw`
+12. `Pi` -> `.agents/pi`
 
 ## Replacement Notes
 

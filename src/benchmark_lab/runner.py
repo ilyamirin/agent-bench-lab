@@ -32,6 +32,8 @@ from .workspace import create_workspace_snapshot
 
 
 class BenchmarkRunner:
+    BROWSER_COMPOSE_TIMEOUT_SECONDS = 60
+
     def __init__(self, repo_root: Path) -> None:
         self.repo_root = repo_root.resolve()
         self.adapters = build_adapter_registry()
@@ -413,23 +415,31 @@ class BenchmarkRunner:
             "fh.close(); "
             "print(media.id)"
         )
-        proc = subprocess.run(
-            self._compose_command(
-                workspace_dir,
-                "exec",
-                "--env",
-                "TESTING=True",
-                "-T",
-                "web",
-                "sh",
-                "-lc",
-                f"cd /home/mediacms.io/mediacms && {self._app_python()} manage.py shell -c {seed_script!r}",
-            ),
-            cwd=self._compose_cwd(workspace_dir),
-            env=self._compose_env(run_spec, workspace_dir),
-            capture_output=True,
-            check=False,
-        )
+        try:
+            proc = subprocess.run(
+                self._compose_command(
+                    workspace_dir,
+                    "exec",
+                    "--env",
+                    "TESTING=True",
+                    "-T",
+                    "web",
+                    "sh",
+                    "-lc",
+                    f"cd /home/mediacms.io/mediacms && {self._app_python()} manage.py shell -c {seed_script!r}",
+                ),
+                cwd=self._compose_cwd(workspace_dir),
+                env=self._compose_env(run_spec, workspace_dir),
+                capture_output=True,
+                check=False,
+                timeout=self.BROWSER_COMPOSE_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            return (
+                False,
+                None,
+                f"Timed out after {self.BROWSER_COMPOSE_TIMEOUT_SECONDS}s while seeding browser media",
+            )
         if proc.returncode != 0:
             return False, None, (proc.stderr or b"").decode("utf-8", errors="replace").strip()
         try:
@@ -445,23 +455,27 @@ class BenchmarkRunner:
             "media=Media.objects.get(title='Playwright Content Warning Demo'); "
             f"assert media.content_warning == '{expected_value}'"
         )
-        proc = subprocess.run(
-            self._compose_command(
-                workspace_dir,
-                "exec",
-                "--env",
-                "TESTING=True",
-                "-T",
-                "web",
-                "sh",
-                "-lc",
-                f"cd /home/mediacms.io/mediacms && {self._app_python()} manage.py shell -c {verify_script!r}",
-            ),
-            cwd=self._compose_cwd(workspace_dir),
-            env=self._compose_env(run_spec, workspace_dir),
-            capture_output=True,
-            check=False,
-        )
+        try:
+            proc = subprocess.run(
+                self._compose_command(
+                    workspace_dir,
+                    "exec",
+                    "--env",
+                    "TESTING=True",
+                    "-T",
+                    "web",
+                    "sh",
+                    "-lc",
+                    f"cd /home/mediacms.io/mediacms && {self._app_python()} manage.py shell -c {verify_script!r}",
+                ),
+                cwd=self._compose_cwd(workspace_dir),
+                env=self._compose_env(run_spec, workspace_dir),
+                capture_output=True,
+                check=False,
+                timeout=self.BROWSER_COMPOSE_TIMEOUT_SECONDS,
+            )
+        except subprocess.TimeoutExpired:
+            return False
         return proc.returncode == 0
 
     def run_acceptance(
