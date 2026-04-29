@@ -10,7 +10,7 @@ from pathlib import Path
 from shlex import quote
 
 from .adapters import build_adapter_registry
-from .browser_check import run_admin_browser_check
+from .browser_check import run_content_warning_browser_check
 from .models import (
     CompatibilityResult,
     CompatibilityStatus,
@@ -403,18 +403,20 @@ class BenchmarkRunner:
         seed_script = (
             "from files.models import Media; "
             "from users.models import User; "
+            "from django.contrib.auth.hashers import make_password; "
             "import uuid; "
             "user = User.objects.order_by('id').first(); "
             "user is None and User.objects.bulk_create([User("
             "username='benchmark_user', "
             "email='benchmark_user@example.com', "
             "name='Benchmark User', "
-            "password='!', "
+            "password=make_password('benchmark-pass'), "
             "is_staff=False, "
             "is_superuser=False"
             ")]); "
             "user = User.objects.filter(username='benchmark_user').first() or User.objects.order_by('id').first(); "
             "assert user is not None; "
+            "User.objects.filter(username='benchmark_user').update(password=make_password('benchmark-pass')); "
             "media = Media.objects.filter(friendly_token='playwright-content-warning').first(); "
             "media is None and Media.objects.bulk_create([Media("
             "title='Playwright Content Warning Demo', "
@@ -628,7 +630,12 @@ class BenchmarkRunner:
             }
         )
         if seeded and media_id is not None:
-            browser = run_admin_browser_check(workspace_dir, run_spec.run_root, media_id, web_port=run_spec.web_port)
+            browser = run_content_warning_browser_check(
+                workspace_dir,
+                run_spec.run_root,
+                media_id,
+                web_port=run_spec.web_port,
+            )
             browser_passed = bool(browser["passed"]) and self._verify_browser_value(run_spec, workspace_dir, "violence")
             automated_checks.append(
                 {
