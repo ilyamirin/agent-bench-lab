@@ -11,6 +11,7 @@ from .openclaw import OpenClawAdapter
 from .openhands import OpenHandsAdapter
 from .pi import PiAdapter
 from .qwen_code import QwenCodeAdapter
+from .yulya_zig import YulyaZigAdapter
 from ..models import CompatibilityStatus
 
 
@@ -23,6 +24,7 @@ def build_adapter_registry() -> dict[str, object]:
         "kilocode": KiloCodeAdapter(),
         "nullclaw": NullClawAdapter(),
         "pi": PiAdapter(),
+        "yulya-zig": YulyaZigAdapter(),
         "openhands": OpenHandsAdapter(),
         "hermes-agent": HermesAdapter(),
         "openclaw": OpenClawAdapter(),
@@ -58,6 +60,7 @@ __all__ = [
     "OpenHandsAdapter",
     "PiAdapter",
     "QwenCodeAdapter",
+    "YulyaZigAdapter",
     "MissingBinaryAdapter",
     "build_adapter_registry",
 ]

@@ -160,6 +160,24 @@ The local comparison corpus currently targets:
 10. `OpenClaw`
 11. `NullClaw`
 12. `Pi`
+13. `yulya-zig`
 
 These are local-only optional benchmark targets. Their upstream URLs and
 licenses are documented in [THIRD_PARTY.md](THIRD_PARTY.md).
+
+## Native Agent Development
+
+`yulya-zig` is the in-repo headless benchmark agent implemented in Zig.
+
+Build:
+
+```bash
+cd native/yulya-zig
+zig build -Doptimize=ReleaseSafe
+```
+
+Doctor:
+
+```bash
+native/yulya-zig/zig-out/bin/yulya-zig doctor --workspace upstream/mediacms
+```

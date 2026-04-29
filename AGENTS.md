@@ -34,6 +34,7 @@ The local comparison corpus in `.agents/` currently includes:
 10. `OpenClaw` -> `.agents/openclaw`
 11. `NullClaw` -> `.agents/nullclaw`
 12. `Pi` -> `.agents/pi`
+13. `yulya-zig` -> `native/yulya-zig`
 
 ## Replacement Notes
 

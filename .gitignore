@@ -7,6 +7,9 @@ runs/
 postgres_data/
 .playwright-cli/
 .tmp-*/
+.zig-cache-global/
+native/yulya-zig/.zig-cache/
+native/yulya-zig/zig-out/
 
 # Python
 __pycache__/

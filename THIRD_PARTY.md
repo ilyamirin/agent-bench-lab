@@ -95,6 +95,13 @@ are not redistributed as part of this repository.
 - Distribution status: local-only clone, not shipped
 - Upstream license: `MIT` (`.agents/pi/LICENSE`)
 
+### yulya-zig
+
+- Upstream repository: local-only implementation in this repository
+- How this repository uses it: in-repo native benchmark target implemented in Zig
+- Distribution status: shipped as repository source under this repository's root `LICENSE`
+- Upstream license: `MIT` (same repository root `LICENSE`)
+
 ### OpenHands
 
 - Upstream repository: <https://github.com/OpenHands/OpenHands>

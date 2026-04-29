@@ -1,0 +1,314 @@
+diff --git a/files/models/media.py b/files/models/media.py
+index 36634a5..bc5b388 100644
+--- a/files/models/media.py
++++ b/files/models/media.py
+@@ -36,6 +36,17 @@ from .video_data import VideoTrimRequest
+ 
+ logger = logging.getLogger(__name__)
+ 
++CONTENT_WARNING_CHOICES = [
++    ("", "None"),
++    ("violence", "Violence"),
++    ("language", "Strong Language"),
++    ("adult", "Adult Content"),
++    ("disturbing", "Disturbing Imagery"),
++    ("other", "Other"),
++]
++
++VALID_CONTENT_WARNINGS = [choice[0] for choice in CONTENT_WARNING_CHOICES]
++
+ 
+ class Media(models.Model):
+     """The most important model for MediaCMS"""
+@@ -53,6 +64,13 @@ class Media(models.Model):
+         null=True,
+         help_text="Media can exist in one or no Channels",
+     )
++    content_warning = models.CharField(
++        max_length=20,
++        blank=True,
++        default="",
++        choices=CONTENT_WARNING_CHOICES,
++        help_text="Optional content warning for this media",
++    )
+     description = models.TextField(blank=True)
+ 
+     dislikes = models.IntegerField(default=0)
+@@ -242,6 +260,13 @@ class Media(models.Model):
+         if not self.title:
+             self.title = self.media_file.path.split("/")[-1]
+ 
++        # Validate content_warning
++        if self.content_warning and self.content_warning not in VALID_CONTENT_WARNINGS:
++            raise ValueError(
++                f"Invalid content_warning value: '{self.content_warning}'. "
++                f"Must be one of: {', '.join(VALID_CONTENT_WARNINGS)}"
++            )
++
++        
+         strip_text_items = ["title", "description"]
+         for item in strip_text_items:
+             setattr(self, item, strip_tags(getattr(self, item, None)))
+diff --git a/files/serializers.py b/files/serializers.py
+index 9d62163..28f9f73 100644
+--- a/files/serializers.py
++++ b/files/serializers.py
+@@ -3,6 +3,7 @@ from rest_framework import serializers
+ 
+ from .methods import is_mediacms_editor
+ from .models import Category, Comment, EncodeProfile, Media, Playlist, Tag
++from .models.media import VALID_CONTENT_WARNINGS
+ 
+ # TODO: put them in a more DRY way
+@@ -78,9 +79,18 @@ class MediaSerializer(serializers.ModelSerializer):
+             "featured",
+             "user_featured",
+             "size",
++            "content_warning",
+             # "category",
+         )
+ 
++    def validate_content_warning(self, value):
++        if value and value not in VALID_CONTENT_WARNINGS:
++            raise serializers.ValidationError(
++                f"Invalid content_warning value: '{value}'. "
++                f"Must be one of: {', '.join(VALID_CONTENT_WARNINGS)}"
++            )
++        return value
++
+     def __init__(self, *args, **kwargs):
+         super().__init__(*args, **kwargs)
+         request = self.context.get('request')
+@@ -112,6 +122,14 @@ class SingleMediaSerializer(serializers.ModelSerializer):
+         rbac_categories = obj.category.filter(is_rbac_category=True).exists()
+         return custom_permissions or rbac_categories
+ 
++    def validate_content_warning(self, value):
++        if value and value not in VALID_CONTENT_WARNINGS:
++            raise serializers.ValidationError(
++                f"Invalid content_warning value: '{value}'. "
++                f"Must be one of: {', '.join(VALID_CONTENT_WARNINGS)}"
++            )
++        return value
++
+     class Meta:
+         model = Media
+         read_only_fields = (
+@@ -166,6 +184,7 @@ class SingleMediaSerializer(serializers.ModelSerializer):
+             "is_reviewed",
+             "edit_url",
+             "tags_info",
++            "content_warning",
+             "hls_info",
+             "license",
+             "subtitles_info",
+diff --git a/files/forms.py b/files/forms.py
+index db32792..02ef439 100644
+--- a/files/forms.py
++++ b/files/forms.py
+@@ -31,6 +31,7 @@ class MediaMetadataForm(forms.ModelForm):
+             "description",
+             "enable_comments",
+             "thumbnail_time",
++            "content_warning",
+         )
+ 
+         widgets = {
+@@ -76,6 +77,7 @@ class MediaMetadataForm(forms.ModelForm):
+             CustomField('add_date'),
+             CustomField('description'),
+             CustomField('enable_comments'),
++            CustomField('content_warning'),
+         ]
+         if self.instance.media_type != "image":
+             layout_fields.append(CustomField('uploaded_poster'))
+diff --git a/files/admin.py b/files/admin.py
+index c100e27..e15f268 100644
+--- a/files/admin.py
++++ b/files/admin.py
+@@ -39,12 +39,13 @@ class MediaAdmin(admin.ModelAdmin):
+         "media_type",
+         "duration",
+         "state",
++        "content_warning",
+         "is_reviewed",
+         "encoding_status",
+         "featured",
+         "get_comments_count",
+     ]
+-    list_filter = ["state", "is_reviewed", "encoding_status", "featured", "category"]
++    list_filter = ["state", "is_reviewed", "encoding_status", "featured", "category", "content_warning"]
+     ordering = ("-add_date",)
+     readonly_fields = ("user", "tags", "category", "channel")
+diff --git a/files/migrations/0015_media_content_warning.py b/files/migrations/0015_media_content_warning.py
+new file mode 100644
+--- /dev/null
++++ b/files/migrations/0015_media_content_warning.py
+@@ -0,0 +1,30 @@
++# Generated migration for content_warning field
++
++from django.db import migrations, models
++
++
++class Migration(migrations.Migration):
++    dependencies = [
++        ("files", "0014_alter_subtitle_options_and_more"),
++    ]
++
++    operations = [
++        migrations.AddField(
++            model_name="media",
++            name="content_warning",
++            field=models.CharField(
++                blank=True,
++                choices=[
++                    ("", "None"),
++                    ("violence", "Violence"),
++                    ("language", "Strong Language"),
++                    ("adult", "Adult Content"),
++                    ("disturbing", "Disturbing Imagery"),
++                    ("other", "Other"),
++                ],
++                default="",
++                help_text="Optional content warning for this media",
++                max_length=20,
++            ),
++        ),
++    ]
+diff --git a/tests/api/test_content_warning.py b/tests/api/test_content_warning.py
+new file mode 100644
+--- /dev/null
++++ b/tests/api/test_content_warning.py
+@@ -0,0 +1,161 @@
++from django.test import TestCase
++from rest_framework.test import APIRequestFactory
++
++from files.models import Media
++from files.serializers import MediaSerializer, SingleMediaSerializer
++from files.tests import create_account
++
++
++class ContentWarningModelTest(TestCase):
++    """Test content_warning field save/read on the Media model."""
++
++    def setUp(self):
++        self.user = create_account()
++
++    def test_content_warning_default_is_empty(self):
++        """Content warning should default to empty string."""
++        media = Media(
++            user=self.user,
++            title="Test Media",
++        )
++        self.assertEqual(media.content_warning, "")
++
++    def test_content_warning_save_and_read(self):
++        """Content warning should be saved and read back correctly."""
++        media = Media(
++            user=self.user,
++            title="Test Media",
++            content_warning="violence",
++        )
++        self.assertEqual(media.content_warning, "violence")
++        media.content_warning = ""
++        self.assertEqual(media.content_warning, "")
++
++    def test_content_warning_all_valid_values(self):
++        """All valid content_warning values should be accepted."""
++        valid_values = ["violence", "language", "adult", "disturbing", "other", ""]
++        for val in valid_values:
++            media = Media(
++                user=self.user,
++                title=f"Test Media {val}",
++                content_warning=val,
++            )
++            self.assertEqual(media.content_warning, val)
++
++    def test_content_warning_invalid_raises(self):
++        """Invalid content_warning values should raise ValueError on save."""
++        media = Media(
++            user=self.user,
++            title="Test Media",
++            content_warning="invalid_value",
++        )
++        with self.assertRaises(ValueError):
++            media.save()
++
++
++class ContentWarningSerializerTest(TestCase):
++    """Test content_warning field exposure in serializers."""
++
++    def setUp(self):
++        self.user = create_account()
++        self.factory = APIRequestFactory()
++
++    def _create_serializer_context(self):
++        request = self.factory.get("/fake-url/")
++        return {"request": request}
++
++    def test_content_warning_in_media_serializer(self):
++        serializer = MediaSerializer(context=self._create_serializer_context())
++        self.assertIn("content_warning", serializer.get_fields().keys())
++
++    def test_content_warning_in_single_media_serializer(self):
++        serializer = SingleMediaSerializer(context=self._create_serializer_context())
++        self.assertIn("content_warning", serializer.get_fields().keys())
++
++    def test_content_warning_serializes_in_output(self):
++        media = Media(
++            user=self.user,
++            title="Test Media",
++            content_warning="adult",
++        )
++        serializer = MediaSerializer(
++            media,
++            context=self._create_serializer_context(),
++        )
++        fields = serializer.get_fields()
++        self.assertIn("content_warning", fields.keys())
++        self.assertEqual(media.content_warning, "adult")
++
++    def test_single_serializer_content_warning_serializes(self):
++        media = Media(
++            user=self.user,
++            title="Another Test",
++            content_warning="language",
++        )
++        serializer = SingleMediaSerializer(
++            media,
++            context=self._create_serializer_context(),
++        )
++        fields = serializer.get_fields()
++        self.assertIn("content_warning", fields.keys())
++        self.assertEqual(media.content_warning, "language")
++
++
++class ContentWarningValidationTest(TestCase):
++    """Test validation of content_warning in serializers."""
++
++    def setUp(self):
++        self.user = create_account()
++        self.factory = APIRequestFactory()
++
++    def _create_serializer_context(self):
++        request = self.factory.get("/fake-url/")
++        return {"request": request}
++
++    def test_serializer_rejects_invalid_content_warning(self):
++        from files.models.media import VALID_CONTENT_WARNINGS
++
++        serializer = MediaSerializer(context=self._create_serializer_context())
++        self.assertIn("violence", VALID_CONTENT_WARNINGS)
++        self.assertIn("adult", VALID_CONTENT_WARNINGS)
++        with self.assertRaises(Exception):
++            _ = serializer.validate_content_warning("not_a_valid_warning")
++
++    def test_serializer_accepts_valid_content_warning(self):
++        from files.models.media import VALID_CONTENT_WARNINGS
++
++        serializer = MediaSerializer(context=self._create_serializer_context())
++
++        for val in VALID_CONTENT_WARNINGS:
++            if val:
++                result = serializer.validate_content_warning(val)
++                self.assertEqual(result, val)
