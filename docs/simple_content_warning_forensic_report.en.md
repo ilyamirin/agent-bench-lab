@@ -20,7 +20,10 @@ That is why many plausible-looking patches still counted as failures.
 
 ## Cohort Outcome
 
-- `Qwen Code` produced the only end-to-end success in the current cohort.
+- `yulya-zig` is the current top result and the only agent that now passes the
+  full public benchmark path end-to-end in the maintained harness.
+- `Qwen Code` remains the strongest external baseline and the first full
+  end-to-end success in the project history.
 - Several agents produced real partial implementations.
 - `Pi` was successfully admitted as a native npm CLI benchmark target and
   reached a clean, meaningful benchmark run.
@@ -79,30 +82,21 @@ This benchmark is most useful when read as a test of closure discipline:
 ## `NullClaw` Snapshot
 
 `NullClaw` is now part of the local corpus as an OCI-backed agent. Its first
-meaningful benchmark run was
-[attempt-2](../runs/nullclaw__simple_content_warning__attempt-2/result.json).
-That run passed environment boot and produced real edits across the model,
-serializers, form, and a migration, but it still failed the benchmark because
-no targeted `content_warning` test file was created, the contract check failed,
-UI wiring stayed incomplete, and the run did not terminate cleanly.
+meaningful benchmark run passed environment boot and produced real edits across
+the model, serializers, form, and a migration, but it still failed the
+benchmark because no targeted `content_warning` test file was created, the
+contract check failed, UI wiring stayed incomplete, and the run did not
+terminate cleanly.
 
-Relevant local artifacts:
-
-- [result.json](../runs/nullclaw__simple_content_warning__attempt-2/result.json)
-- [changes.patch](../runs/nullclaw__simple_content_warning__attempt-2/changes.patch)
-- [stdout.log](../runs/nullclaw__simple_content_warning__attempt-2/stdout.log)
-- [targeted_tests.json](../runs/nullclaw__simple_content_warning__attempt-2/checks/targeted_tests.json)
-- [contract_shell.json](../runs/nullclaw__simple_content_warning__attempt-2/checks/contract_shell.json)
-- [ui_wiring_static.json](../runs/nullclaw__simple_content_warning__attempt-2/checks/ui_wiring_static.json)
-- [smoke summary](../runs/operators/nullclaw_smoke_20260423T140224Z/smoke_summary.json)
+The full artifacts remain local-only and are intentionally omitted from this
+public-safe summary.
 
 ## `Pi` Snapshot
 
 `Pi` is now part of the local corpus as a native npm-installed CLI agent. Its
-current operative benchmark run is
-[attempt-2](../runs/pi__simple_content_warning__attempt-2/result.json).
-`attempt-1` proved the adapter and runtime path, but it was polluted by a
-runner-side browser-seed hang before classification completed cleanly.
+current operative benchmark run is the second attempt. The first attempt proved
+the adapter and runtime path, but it was polluted by a runner-side
+browser-seed hang before classification completed cleanly.
 
 `attempt-2` passed environment boot, the serializer contract check, and the
 broader regression context check. It also produced real edits across the model,
@@ -111,19 +105,24 @@ still failed acceptance because the generated tests were not benchmark-safe for
 this codebase, static UI wiring did not include the required `admin.py`
 surface, and browser seeding had to be cut off by the new timeout guard.
 
-Relevant local artifacts:
+The underlying run logs and smoke artifacts are local-only and are not linked
+from the public repository.
 
-- [result.json](../runs/pi__simple_content_warning__attempt-2/result.json)
-- [changes.patch](../runs/pi__simple_content_warning__attempt-2/changes.patch)
-- [stdout.log](../runs/pi__simple_content_warning__attempt-2/stdout.log)
-- [targeted_tests.json](../runs/pi__simple_content_warning__attempt-2/checks/targeted_tests.json)
-- [contract_shell.json](../runs/pi__simple_content_warning__attempt-2/checks/contract_shell.json)
-- [ui_wiring_static.json](../runs/pi__simple_content_warning__attempt-2/checks/ui_wiring_static.json)
-- [regression_context.json](../runs/pi__simple_content_warning__attempt-2/checks/regression_context.json)
-- [smoke summary](../runs/operators/pi_smoke_20260428T204821Z/smoke_summary.json)
+## `yulya-zig` Snapshot
+
+`yulya-zig` is the in-repo headless benchmark agent implemented in Zig. It is
+currently the top result on `simple_content_warning`.
+
+The decisive difference was not raw code generation quality, but closure
+discipline. `yulya-zig` now completes the full benchmark loop: required code
+changes, targeted acceptance checks, static UI coverage, seeded browser flow,
+and browser-level persistence verification.
+
+This also helped harden the benchmark itself. Along the way, the harness was
+tightened around Docker preflight, browser seeding, and ref-based Playwright
+verification.
 
 ## Related Documents
 
 - Benchmark plan: [2026-04-21 MediaCMS Benchmark Plan](superpowers/specs/2026-04-21-mediacms-benchmark-plan.md)
-- Internal expanded report: [simple_content_warning_forensic_report.internal.md](../runs/reports/simple_content_warning_forensic_report.internal.md)
 - Cohort methodology and licensing context: [THIRD_PARTY.md](../THIRD_PARTY.md)

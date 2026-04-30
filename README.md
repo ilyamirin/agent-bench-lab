@@ -23,6 +23,19 @@ What is still evolving:
 - browser-harness robustness across every agent/runtime combination
 - task breadth beyond the first benchmark task
 
+## Current Benchmark Snapshot
+
+The benchmark has now produced two full end-to-end successes on
+`simple_content_warning` under the shared `OpenRouter / qwen/qwen3.6-plus`
+policy:
+
+- `yulya-zig` is the current top result in the maintained harness
+- `Qwen Code` remains the strongest external baseline
+
+Several other agents reached meaningful partial implementations, but usually
+fell short on closure: migrations, benchmark-safe targeted tests, visible UI
+surfaces, or browser-level persistence verification.
+
 Suggested repository social preview asset:
 [social-preview-agent-bench-lab.png](docs/assets/social-preview-agent-bench-lab.png)
 
@@ -106,7 +119,7 @@ PYTHONPATH=src .venv/bin/python -m benchmark_lab --agents qwen-code --attempts 1
 For a single agent and single attempt without cohort aggregation:
 
 ```bash
-PYTHONPATH=src .venv/bin/python -m benchmark_lab.single_run --agent cline --attempt 10
+PYTHONPATH=src .venv/bin/python -m benchmark_lab.single_run --agent yulya-zig --attempt 22
 ```
 
 The runner now performs an early Docker access preflight. If `docker ps` is not
@@ -168,6 +181,11 @@ licenses are documented in [THIRD_PARTY.md](THIRD_PARTY.md).
 ## Native Agent Development
 
 `yulya-zig` is the in-repo headless benchmark agent implemented in Zig.
+
+Current role:
+
+- benchmark-first agent optimized for acceptance-driven coding tasks
+- current top result on `simple_content_warning`
 
 Build:
 
